@@ -11,7 +11,7 @@ df = CSV.read("..//dataset//Iris.csv", DataFrame)
 
 #Declaring global varib
 X = hcat(ones(150),Matrix(df[:,2:4])) #design matrix
-θ = Vector{Int}(undef,size(df)[2])
+θ = Vector{Float64}(undef,size(X)[2])
 rand!(θ,1:100)
 y = df[:,5]
 
@@ -19,29 +19,42 @@ y = df[:,5]
 h(x) = θ'x
 
 #cost function J
-J(θ) = (0.5)(X*θ-y)'(X*θ-y)
+#J(θ::Vector) = (X*θ-y)'(X*θ-y)
 
+J(θ::Vector) = 0.5*sum((X*θ-y).*(X*θ-y))
 
-function LMSUpdateRule(xi,yi,α,θj)
-    θj .+= α*(yi - h(xi))*xi[j]
+"""
+function LMSUpdateRule(xi,yi,α,θj,idxθj)
+    θj .+= α*(yi - h(xi))*xi[idxθj]
+    return θj
     end;
+"""
 
-function BatchGradientDescent(X,y,α)
-    
+function BatchGradientDescent(X,y,epochs,α)
+    for epoch in 1:epochs
+        #println(epoch)
         for (idxθj,θj) in enumerate(θ)
-            for (idx, xi) in enumerate(X)
-                LMSUpdateRule(xi, y[idx], α, θj)
+            batchsum = 0
+            for (row_index, x) in enumerate(eachrow(X))
+                batchsum += (y[row_index] - h(x))*x[idxθj]
             end;
+            #println("batchsum: " ,batchsum)
+            θj += α*batchsum
             θ[idxθj] = θj
-
         end;
-
+        println("Cost Func:", J(θ))
+    end;
     return θ
     end;
 
 
 
+#h(X[1,:])
 
-BatchGradientDescent(X,y,0.1)
+#println(J(θ))
+J(BatchGradientDescent(X,y,10000,0.000001))
 
-println(J(θ))
+
+
+#Vectorised func
+
